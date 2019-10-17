@@ -1,0 +1,227 @@
+package seedu.revision.logic.commands;
+
+import static java.util.Objects.requireNonNull;
+import static seedu.revision.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.revision.logic.parser.CliSyntax.PREFIX_EMAIL;
+import static seedu.revision.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.revision.logic.parser.CliSyntax.PREFIX_PHONE;
+import static seedu.revision.logic.parser.CliSyntax.PREFIX_TAG;
+import static seedu.revision.model.Model.PREDICATE_SHOW_ALL_ANSWERABLES;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import seedu.revision.commons.core.Messages;
+import seedu.revision.commons.core.index.Index;
+import seedu.revision.commons.util.CollectionUtil;
+import seedu.revision.logic.commands.exceptions.CommandException;
+import seedu.revision.model.Model;
+import seedu.revision.model.answerable.Address;
+import seedu.revision.model.answerable.Answerable;
+import seedu.revision.model.answerable.Email;
+import seedu.revision.model.answerable.Name;
+import seedu.revision.model.answerable.Phone;
+import seedu.revision.model.tag.Tag;
+
+/**
+ * Edits the details of an existing answerable in the revision tool.
+ */
+public class EditCommand extends Command {
+
+    public static final String COMMAND_WORD = "edit";
+
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Edits the details of the question identified "
+            + "by the index number used in the displayed question list. "
+            + "Existing values will be overwritten by the input values.\n"
+            + "Parameters: INDEX (must be a positive integer) "
+            + "[" + PREFIX_NAME + "NAME] "
+            + "[" + PREFIX_PHONE + "PHONE] "
+            + "[" + PREFIX_EMAIL + "EMAIL] "
+            + "[" + PREFIX_ADDRESS + "ADDRESS] "
+            + "[" + PREFIX_TAG + "TAG]...\n"
+            + "Example: " + COMMAND_WORD + " 1 "
+            + PREFIX_PHONE + "91234567 "
+            + PREFIX_EMAIL + "johndoe@example.com";
+
+    public static final String MESSAGE_EDIT_ANSWERABLE_SUCCESS = "Edited Question: %1$s";
+    public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
+    public static final String MESSAGE_DUPLICATE_ANSWERABLE = "This question already exists in the question bank.";
+
+    private final Index index;
+    private final EditAnswerableDescriptor editAnswerableDescriptor;
+
+    /**
+     * @param index of the answerable in the filtered answerable list to edit
+     * @param editAnswerableDescriptor details to edit the answerable with
+     */
+    public EditCommand(Index index, EditAnswerableDescriptor editAnswerableDescriptor) {
+        requireNonNull(index);
+        requireNonNull(editAnswerableDescriptor);
+
+        this.index = index;
+        this.editAnswerableDescriptor = new EditAnswerableDescriptor(editAnswerableDescriptor);
+    }
+
+    @Override
+    public CommandResult execute(Model model) throws CommandException {
+        requireNonNull(model);
+        List<Answerable> lastShownList = model.getFilteredAnswerableList();
+
+        if (index.getZeroBased() >= lastShownList.size()) {
+            throw new CommandException(Messages.MESSAGE_INVALID_ANSWERABLE_DISPLAYED_INDEX);
+        }
+
+        Answerable answerableToEdit = lastShownList.get(index.getZeroBased());
+        Answerable editedAnswerable = createEditedAnswerable(answerableToEdit, editAnswerableDescriptor);
+
+        if (!answerableToEdit.isSameAnswerable(editedAnswerable) && model.hasAnswerable(editedAnswerable)) {
+            throw new CommandException(MESSAGE_DUPLICATE_ANSWERABLE);
+        }
+
+        model.setAnswerable(answerableToEdit, editedAnswerable);
+        model.updateFilteredAnswerableList(PREDICATE_SHOW_ALL_ANSWERABLES);
+        return new CommandResult(String.format(MESSAGE_EDIT_ANSWERABLE_SUCCESS, editedAnswerable));
+    }
+
+    /**
+     * Creates and returns an {@code Answerable} with the details of {@code answerableToEdit}
+     * edited with {@code editAnswerableDescriptor}.
+     */
+    private static Answerable createEditedAnswerable(Answerable answerableToEdit,
+                                                     EditAnswerableDescriptor editAnswerableDescriptor) {
+        assert answerableToEdit != null;
+
+        Name updatedName = editAnswerableDescriptor.getName().orElse(answerableToEdit.getName());
+        Phone updatedPhone = editAnswerableDescriptor.getPhone().orElse(answerableToEdit.getPhone());
+        Email updatedEmail = editAnswerableDescriptor.getEmail().orElse(answerableToEdit.getEmail());
+        Address updatedAddress = editAnswerableDescriptor.getAddress().orElse(answerableToEdit.getAddress());
+        Set<Tag> updatedTags = editAnswerableDescriptor.getTags().orElse(answerableToEdit.getTags());
+
+        return new Answerable(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedTags);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // short circuit if same object
+        if (other == this) {
+            return true;
+        }
+
+        // instanceof handles nulls
+        if (!(other instanceof EditCommand)) {
+            return false;
+        }
+
+        // state check
+        EditCommand e = (EditCommand) other;
+        return index.equals(e.index)
+                && editAnswerableDescriptor.equals(e.editAnswerableDescriptor);
+    }
+
+    /**
+     * Stores the details to edit the answerable with. Each non-empty field value will replace the
+     * corresponding field value of the answerable.
+     */
+    public static class EditAnswerableDescriptor {
+        private Name name;
+        private Phone phone;
+        private Email email;
+        private Address address;
+        private Set<Tag> tags;
+
+        public EditAnswerableDescriptor() {}
+
+        /**
+         * Copy constructor.
+         * A defensive copy of {@code tags} is used internally.
+         */
+        public EditAnswerableDescriptor(EditAnswerableDescriptor toCopy) {
+            setName(toCopy.name);
+            setPhone(toCopy.phone);
+            setEmail(toCopy.email);
+            setAddress(toCopy.address);
+            setTags(toCopy.tags);
+        }
+
+        /**
+         * Returns true if at least one field is edited.
+         */
+        public boolean isAnyFieldEdited() {
+            return CollectionUtil.isAnyNonNull(name, phone, email, address, tags);
+        }
+
+        public void setName(Name name) {
+            this.name = name;
+        }
+
+        public Optional<Name> getName() {
+            return Optional.ofNullable(name);
+        }
+
+        public void setPhone(Phone phone) {
+            this.phone = phone;
+        }
+
+        public Optional<Phone> getPhone() {
+            return Optional.ofNullable(phone);
+        }
+
+        public void setEmail(Email email) {
+            this.email = email;
+        }
+
+        public Optional<Email> getEmail() {
+            return Optional.ofNullable(email);
+        }
+
+        public void setAddress(Address address) {
+            this.address = address;
+        }
+
+        public Optional<Address> getAddress() {
+            return Optional.ofNullable(address);
+        }
+
+        /**
+         * Sets {@code tags} to this object's {@code tags}.
+         * A defensive copy of {@code tags} is used internally.
+         */
+        public void setTags(Set<Tag> tags) {
+            this.tags = (tags != null) ? new HashSet<>(tags) : null;
+        }
+
+        /**
+         * Returns an unmodifiable tag set, which throws {@code UnsupportedOperationException}
+         * if modification is attempted.
+         * Returns {@code Optional#empty()} if {@code tags} is null.
+         */
+        public Optional<Set<Tag>> getTags() {
+            return (tags != null) ? Optional.of(Collections.unmodifiableSet(tags)) : Optional.empty();
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            // short circuit if same object
+            if (other == this) {
+                return true;
+            }
+
+            // instanceof handles nulls
+            if (!(other instanceof EditAnswerableDescriptor)) {
+                return false;
+            }
+
+            // state check
+            EditAnswerableDescriptor e = (EditAnswerableDescriptor) other;
+
+            return getName().equals(e.getName())
+                    && getPhone().equals(e.getPhone())
+                    && getEmail().equals(e.getEmail())
+                    && getAddress().equals(e.getAddress())
+                    && getTags().equals(e.getTags());
+        }
+    }
+}
