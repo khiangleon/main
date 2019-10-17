@@ -2,6 +2,8 @@ package seedu.revision.logic.parser;
 
 import static seedu.revision.commons.core.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
+import java.util.ArrayList;
+
 import seedu.revision.commons.core.index.Index;
 import seedu.revision.logic.commands.DeleteCommand;
 import seedu.revision.logic.parser.exceptions.ParseException;
@@ -11,6 +13,8 @@ import seedu.revision.logic.parser.exceptions.ParseException;
  */
 public class DeleteCommandParser implements Parser<DeleteCommand> {
 
+    private ArrayList<Index> indexArray;
+
     /**
      * Parses the given {@code String} of arguments in the context of the DeleteCommand
      * and returns a DeleteCommand object for execution.
@@ -18,8 +22,12 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
      */
     public DeleteCommand parse(String args) throws ParseException {
         try {
-            Index index = ParserUtil.parseIndex(args);
-            return new DeleteCommand(index);
+            indexArray = new ArrayList<>();
+            String[] rawIndices = args.strip().split(" ");
+            for (String index : rawIndices) {
+                indexArray.add(ParserUtil.parseIndex(index.strip()));
+            }
+            return new DeleteCommand(indexArray);
         } catch (ParseException pe) {
             throw new ParseException(
                     String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE), pe);

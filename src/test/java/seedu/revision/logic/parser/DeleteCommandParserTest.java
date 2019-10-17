@@ -5,8 +5,11 @@ import static seedu.revision.logic.parser.CommandParserTestUtil.assertParseFailu
 import static seedu.revision.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.revision.testutil.TypicalIndexes.INDEX_FIRST_ANSWERABLE;
 
+import java.util.ArrayList;
+
 import org.junit.jupiter.api.Test;
 
+import seedu.revision.commons.core.index.Index;
 import seedu.revision.logic.commands.DeleteCommand;
 
 /**
@@ -22,7 +25,9 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_validArgs_returnsDeleteCommand() {
-        assertParseSuccess(parser, "1", new DeleteCommand(INDEX_FIRST_ANSWERABLE));
+        ArrayList<Index> indexToDelete = new ArrayList<>();
+        indexToDelete.add(INDEX_FIRST_ANSWERABLE);
+        assertParseSuccess(parser, "1", new DeleteCommand(indexToDelete));
     }
 
     @Test
