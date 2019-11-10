@@ -26,8 +26,12 @@ public class Statistics {
     // Initialising a dictionary
     private Dictionary<String, String> scores = new Hashtable<>();
 
-    public Statistics(Dictionary scores) {
+    public Statistics(Dictionary<String, String> scores) {
         requireNonNull(scores);
+        this.scores.put("total", scores.get("total"));
+        this.scores.put("difficulty 1", scores.get("difficulty 1"));
+        this.scores.put("difficulty 2", scores.get("difficulty 2"));
+        this.scores.put("difficulty 3", scores.get("difficulty 3"));
     }
 
     public Statistics(String results) {
@@ -70,7 +74,7 @@ public class Statistics {
 
     @Override
     public int hashCode() {
-        return String.format(String.valueOf(scores)).hashCode();
+        return String.valueOf(scores).hashCode();
     }
 
 }

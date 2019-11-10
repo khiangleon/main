@@ -81,6 +81,14 @@ public class StartQuizWindow extends ParentWindow {
     public StartQuizWindow(Stage primaryStage, Logic logic, Mode mode) {
         super(FXML, primaryStage, logic);
         this.mode = mode;
+        raw.put("total", 0);
+        raw.put("difficulty 1", 0);
+        raw.put("difficulty 2", 0);
+        raw.put("difficulty 3", 0);
+        results.put("total", "0");
+        results.put("difficulty 1", "0");
+        results.put("difficulty 2", "0");
+        results.put("difficulty 3", "0");
     }
 
     /** gets the current progress of the user **/
@@ -294,8 +302,14 @@ public class StartQuizWindow extends ParentWindow {
     private void restartQuiz() {
         answerableListPanelPlaceholder.getChildren().remove(answersGridPane.getRoot());
         fillInnerParts();
-        raw = new Hashtable<>();
-        results = new Hashtable<>();
+        raw.put("total", 0);
+        raw.put("difficulty 1", 0);
+        raw.put("difficulty 2", 0);
+        raw.put("difficulty 3", 0);
+        results.put("total", "0");
+        results.put("difficulty 1", "0");
+        results.put("difficulty 2", "0");
+        results.put("difficulty 3", "0");
         totalScore = 0;
         accumulatedSize = 0;
         currentProgressIndex.set(0);
